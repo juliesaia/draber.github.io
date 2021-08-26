@@ -5,7 +5,7 @@
  *  https://www.gnu.org/licenses/gpl-3.0.en.html
  */
 import data from '../modules/data.js';
-import TablePane from './tablePane.js';
+import DataTbl from './dataTbl.js';
 import el from '../modules/element.js';
 
 /**
@@ -14,7 +14,7 @@ import el from '../modules/element.js';
  * @param {App} app
  * @returns {Plugin} LetterCount
  */
-class LetterCount extends TablePane {
+class LetterCount extends DataTbl {
 
     /**
      * Get the data for the table cells
@@ -57,7 +57,7 @@ class LetterCount extends TablePane {
      */
     constructor(app) {
 
-        super(app, 'Letter count', 'The number of words by length', {
+        super(app, 'Letter Count', 'The number of words by length', {
             cssMarkers: {
                 completed: (rowData, i) => rowData[2] === 0
             }

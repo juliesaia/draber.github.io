@@ -132,7 +132,7 @@ class Community extends Plugin {
             canChangeState: true
         });
 
-        this.menuAction = 'popup';
+        this.menuAction = 'popup sidebar';
         this.menuIcon = 'null';
         const words = ['two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
 

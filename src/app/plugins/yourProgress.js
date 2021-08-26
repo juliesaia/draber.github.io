@@ -5,7 +5,7 @@
  *  https://www.gnu.org/licenses/gpl-3.0.en.html
  */
 import data from '../modules/data.js';
-import TablePane from './tablePane.js';
+import DataTbl from './dataTbl.js';
 import Popup from './popup.js';
 import el from '../modules/element.js';
 
@@ -15,7 +15,7 @@ import el from '../modules/element.js';
  * @param {App} app
  * @returns {Plugin} YourProgress
  */
-class YourProgress extends TablePane {
+class YourProgress extends DataTbl {
 
     /**
      * Display pop-up
@@ -127,7 +127,7 @@ class YourProgress extends TablePane {
         this.popup = new Popup(this.app, this.key)
             .setContent('title', this.title);
 
-        this.menuAction = 'popup';
+        this.menuAction = 'popup sidebar';
         this.menuIcon = 'null';
 
     }

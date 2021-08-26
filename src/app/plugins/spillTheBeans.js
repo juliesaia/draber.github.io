@@ -27,7 +27,8 @@ class SpillTheBeans extends Plugin {
         let emoji = '🙂';
         if (!evt.detail) {
             emoji = '😐';
-        } else if (!data.getList('remainders').filter(term => term.startsWith(evt.detail)).length) {
+        }
+        else if (!data.getList('remainders').filter(term => term.startsWith(evt.detail)).length) {
             emoji = '🙁';
         }
         this.ui.textContent = emoji;
@@ -47,7 +48,7 @@ class SpillTheBeans extends Plugin {
      */
     constructor(app) {
 
-        super(app, 'Spill the beans', 'An emoji that shows if the last letter was right or wrong', {
+        super(app, 'Spill the Beans', 'An emoji that shows if the last letter was right or wrong', {
             canChangeState: true,
             runEvt: prefix('newInput'),
             addMethod: 'prepend'

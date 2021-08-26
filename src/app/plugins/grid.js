@@ -5,7 +5,7 @@
  *  https://www.gnu.org/licenses/gpl-3.0.en.html
  */
 import data from '../modules/data.js';
-import TablePane from './tablePane.js';
+import DataTbl from './dataTbl.js';
 import Popup from './popup.js';
 import el from '../modules/element.js';
 import {
@@ -18,7 +18,7 @@ import {
  * @param {App} app
  * @returns {Plugin} Grid
  */
-class Grid extends TablePane {
+class Grid extends DataTbl {
 
     /**
      * Display pop-up

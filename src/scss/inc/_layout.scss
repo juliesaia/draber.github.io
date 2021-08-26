@@ -4,8 +4,18 @@
  *  Copyright (C) 2020  Dieter Raber
  *  https://www.gnu.org/licenses/gpl-3.0.en.html
  */
-$gameOffset: 12;
-$gameWidth: 1280;
+
+$sideBarThreshold: 1466;
+
+[data-sba-active="true"] {
+    --sba-game-offset: 12px;
+    --sba-app-width: 100px;
+    --sba-app-padding: 0;
+    --sba-app-margin: 0;
+    --sba-mobile-threshold: 900px;
+    --sba-game-base-width: 1280px;
+    --sba-game-width: calc(var(--sba-game-base-width) - (2 * var(--sba-game-offset)));
+}
 
 .sba-container {
     display: none;
@@ -68,12 +78,6 @@ $gameWidth: 1280;
 
 
 [data-sba-active="true"] {
-    --sba-app-width: 100px;
-    --sba-app-padding: 0;
-    --sba-app-margin: 0;
-    --sba-game-offset: #{$gameOffset * 1px};
-    --sba-game-width: #{$gameWidth - (2 * $gameOffset) * 1px};
-    --sba-mobile-threshold: 900px;
 
     .sba-container {
         display: block;
@@ -143,7 +147,7 @@ $gameWidth: 1280;
         table {
             table-layout: auto;
     
-            &.sba-data-pane {
+            &.sba-data-tbl {
                 tbody {
                     th {
                         width: 28px !important;
@@ -202,7 +206,7 @@ $gameWidth: 1280;
         $wCols: 23;
         $w1stCol: 100 - ($wCols * 3);
 
-        .sba-data-pane {
+        .sba-data-tbl {
 
             tbody {
                 th {
@@ -258,6 +262,37 @@ $gameWidth: 1280;
 
         [data-ui="header"] {
             display: block;
+        }
+    }
+}
+
+
+// result list on the right
+@media (min-width: 768px) {
+
+    [data-sba-theme] {
+        &.pz-page {
+            .sba-pop-up {
+                &.sb-modal-frame {
+                    .sb-modal-content {
+                        .sb-modal-body {
+                            padding-right: 56px;
+                        }
+
+                        .sb-modal-header {
+                            padding-right: 56px;
+                        }
+
+                        .sba-modal-footer {
+                            text-align: right;
+                            border-top: 1px solid var(--border-color);
+                            padding-top: 10px;
+                            width: calc(100% - 112px);
+                            margin: -8px auto 15px;
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -324,33 +359,27 @@ $gameWidth: 1280;
     }
 }
 
+@media (min-width: #{$sideBarThreshold * 1px}) {
+    [data-sba-sidebar="true"] {
+        &[data-sba-submenu="false"] {
+            --sba-app-width: 370px;
+            --sba-app-margin: 16px 0 0 0;
+            --sba-game-base-width: #{$sideBarThreshold * 1px};
+            .sb-status-box {
+                max-width: 620px;
+            }
+            details {
+                overflow-y: hidden
+            }          
+            
+        }
+        
 
-// result list on the right
-@media (min-width: 768px) {
-
-    [data-sba-theme] {
-        &.pz-page {
-            .sba-pop-up {
-                &.sb-modal-frame {
-                    .sb-modal-content {
-                        .sb-modal-body {
-                            padding-right: 56px;
-                        }
-
-                        .sb-modal-header {
-                            padding-right: 56px;
-                        }
-
-                        .sba-modal-footer {
-                            text-align: right;
-                            border-top: 1px solid var(--border-color);
-                            padding-top: 10px;
-                            width: calc(100% - 112px);
-                            margin: -8px auto 15px;
-                        }
-                    }
-                }
+        [data-ui="submenu"] {
+            [data-action*="sidebar"] {
+                display: none;
             }
         }
     }
 }
+

@@ -21,6 +21,7 @@ import Googlify from '../plugins/googlify.js';
 import Styles from '../plugins/styles.js';
 import Menu from '../plugins/menu.js';
 import Grid from '../plugins/grid.js';
+import Sidebar from '../plugins/sidebar.js';
 
 /**
  * Plugins
@@ -37,15 +38,16 @@ const getPlugins = () => {
         ProgressBar,
         SpillTheBeans,
         DarkMode,
-        ColorConfig,
-        PangramHl,
-        Googlify,
+        Sidebar,
         Styles,
         Menu,
         Grid,
         YourProgress,
         Community,
-        TodaysAnswers
+        ColorConfig,
+        TodaysAnswers,
+        PangramHl,
+        Googlify
     }
 }
 

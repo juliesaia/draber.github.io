@@ -32,25 +32,6 @@ class Popup {
     }
 
     /**
-     * Get a reference to the `<template>` that holds the pop-ups while idle
-     * Create one if it doesn't exist yet
-     * @returns {*}
-     */
-    getTarget() {
-        const dataUi = prefix('popup-container', 'd');
-        let container = el.$(`[data-ui="${dataUi}"]`);
-        if (!container) {
-            container = el.template({
-                data: {
-                    ui: dataUi
-                }
-            });
-            el.$('body').append(container);
-        }
-        return container;
-    }
-
-    /**
      * Create a pop-up, this mimics the pop-ups already available in Spelling Bee
      * @returns {HTMLElement}
      */
@@ -144,7 +125,7 @@ class Popup {
             this.modalSystem.classList.add('sb-modal-open');
             this.isOpen = true;
         } else {
-            this.getTarget().append(this.ui);
+            this.app.componentContainer.append(this.ui);
             this.modalSystem.classList.remove('sb-modal-open');
             this.isOpen = false;
         }
@@ -201,7 +182,7 @@ class Popup {
 
         this.enableKeyClose();
 
-        this.getTarget().append(this.ui);
+        this.app.componentContainer.append(this.ui);
     }
 
 }

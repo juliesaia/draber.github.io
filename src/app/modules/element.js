@@ -126,8 +126,8 @@ const fn = {
         } else {
             const fragment = document.createDocumentFragment();
             // Array.from avoids problems with live collections
-            content.forEach(entry => {
-                fragment.append(entry);
+            Array.from(content).forEach(element => {
+                fragment.append(element);
             })
             return fragment;
 

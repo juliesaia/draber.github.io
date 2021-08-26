@@ -5,7 +5,7 @@
  *  https://www.gnu.org/licenses/gpl-3.0.en.html
  */
 import data from '../modules/data.js';
-import TablePane from './tablePane.js';
+import DataTbl from './dataTbl.js';
 import el from '../modules/element.js';
 
 /**
@@ -14,7 +14,7 @@ import el from '../modules/element.js';
  * @param {App} app
  * @returns {Plugin} FirstLetter
  */
-class FirstLetter extends TablePane {
+class FirstLetter extends DataTbl {
 
     /**
      * Get the data for the table cells
@@ -70,7 +70,7 @@ class FirstLetter extends TablePane {
      */
     constructor(app) {
 
-        super(app, 'First letter', 'The number of words by first letter', {
+        super(app, 'First Letter', 'The number of words by first letter', {
             cssMarkers: {
                 completed: (rowData, i) => rowData[2] === 0,
                 preeminent: (rowData, i) => rowData[0] === data.getCenterLetter()

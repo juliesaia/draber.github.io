@@ -26,11 +26,11 @@
                 children.forEach(elem => {
                     node.append(elem);
                 });
+                return node;
             }
             else {
-                node = doc.documentElement;
+                return doc.documentElement;
             }
-            return node;
         }
         console.error('Expected Element|DocumentFragment|String|HTMLCode|SVGCode, got', content);
     };
@@ -63,8 +63,8 @@
                 return content[0]
             } else {
                 const fragment = document.createDocumentFragment();
-                content.forEach(entry => {
-                    fragment.append(entry);
+                Array.from(content).forEach(element => {
+                    fragment.append(element);
                 });
                 return fragment;
             }
@@ -416,19 +416,6 @@
             });
             return this;
         }
-        getTarget() {
-            const dataUi = prefix('popup-container', 'd');
-            let container = el.$(`[data-ui="${dataUi}"]`);
-            if (!container) {
-                container = el.template({
-                    data: {
-                        ui: dataUi
-                    }
-                });
-                el.$('body').append(container);
-            }
-            return container;
-        }
         create() {
             return el.div({
                 classNames: ['sb-modal-frame', prefix('pop-up', 'd')],
@@ -501,7 +488,7 @@
                 this.modalSystem.classList.add('sb-modal-open');
                 this.isOpen = true;
             } else {
-                this.getTarget().append(this.ui);
+                this.app.componentContainer.append(this.ui);
                 this.modalSystem.classList.remove('sb-modal-open');
                 this.isOpen = false;
             }
@@ -538,7 +525,7 @@
             };
             this.ui = this.create();
             this.enableKeyClose();
-            this.getTarget().append(this.ui);
+            this.app.componentContainer.append(this.ui);
         }
     }
 
@@ -685,13 +672,13 @@
         }
     }
 
-    class TablePane extends Plugin {
+    class DataTbl extends Plugin {
         run(evt) {
-            this.pane = el.empty(this.pane);
+            this.dataTbl = el.empty(this.dataTbl);
             const tbody = el.tbody();
             const data = this.getData();
             if (this.hasHeadRow) {
-                this.pane.append(this.buildHead(data.shift()));
+                this.dataTbl.append(this.buildHead(data.shift()));
             }
             const l = data.length;
             let colCnt = 0;
@@ -714,8 +701,8 @@
                 });
                 tbody.append(tr);
             });
-            this.pane.dataset.cols = colCnt;
-            this.pane.append(tbody);
+            this.dataTbl.dataset.cols = colCnt;
+            this.dataTbl.append(tbody);
             return this;
         }
         buildHead(rowData) {
@@ -728,7 +715,7 @@
             });
         }
         getPane() {
-            return this.pane;
+            return this.dataTbl;
         }
         constructor(app, title, description, {
             canChangeState = true,
@@ -747,13 +734,13 @@
             this.cssMarkers = cssMarkers;
             this.hasHeadRow = hasHeadRow;
             this.hasHeadCol = hasHeadCol;
-            this.pane = el.table({
-                classNames: ['pane', prefix('dataPane', 'd')]
+            this.dataTbl = el.table({
+                classNames: ['pane', prefix('dataTbl', 'd')]
             });
         }
     }
 
-    class Score extends TablePane {
+    class Score extends DataTbl {
         getData() {
             const keys = ['foundTerms', 'remainders', 'answers'];
             return [
@@ -783,7 +770,8 @@
             let emoji = '🙂';
             if (!evt.detail) {
                 emoji = '😐';
-            } else if (!data.getList('remainders').filter(term => term.startsWith(evt.detail)).length) {
+            }
+            else if (!data.getList('remainders').filter(term => term.startsWith(evt.detail)).length) {
                 emoji = '🙁';
             }
             this.ui.textContent = emoji;
@@ -796,7 +784,7 @@
             return super.toggle(state);
         }
         constructor(app) {
-            super(app, 'Spill the beans', 'An emoji that shows if the last letter was right or wrong', {
+            super(app, 'Spill the Beans', 'An emoji that shows if the last letter was right or wrong', {
                 canChangeState: true,
                 runEvt: prefix('newInput'),
                 addMethod: 'prepend'
@@ -809,7 +797,7 @@
         }
     }
 
-    class LetterCount extends TablePane {
+    class LetterCount extends DataTbl {
         getData() {
             const counts = {};
             const cellData = [
@@ -841,7 +829,7 @@
             return cellData;
         }
         constructor(app) {
-            super(app, 'Letter count', 'The number of words by length', {
+            super(app, 'Letter Count', 'The number of words by length', {
                 cssMarkers: {
                     completed: (rowData, i) => rowData[2] === 0
                 }
@@ -858,7 +846,7 @@
         }
     }
 
-    class FirstLetter extends TablePane {
+    class FirstLetter extends DataTbl {
         getData() {
             const letters = {};
             const answers = data.getList('answers').sort((a, b) => {
@@ -901,7 +889,7 @@
             return cellData;
         }
         constructor(app) {
-            super(app, 'First letter', 'The number of words by first letter', {
+            super(app, 'First Letter', 'The number of words by first letter', {
                 cssMarkers: {
                     completed: (rowData, i) => rowData[2] === 0,
                     preeminent: (rowData, i) => rowData[0] === data.getCenterLetter()
@@ -919,7 +907,7 @@
         }
     }
 
-    class Pangrams extends TablePane {
+    class Pangrams extends DataTbl {
         getData() {
             const pangramCount = data.getCount('pangrams');
             const foundPangramCount = data.getCount('foundPangrams');
@@ -951,7 +939,7 @@
         }
     }
 
-    class YourProgress extends TablePane {
+    class YourProgress extends DataTbl {
         display() {
             const points = data.getPoints('foundTerms');
             const max = data.getPoints('answers');
@@ -1030,7 +1018,7 @@
             });
             this.popup = new Popup(this.app, this.key)
                 .setContent('title', this.title);
-            this.menuAction = 'popup';
+            this.menuAction = 'popup sidebar';
             this.menuIcon = 'null';
         }
     }
@@ -1101,7 +1089,7 @@
             super(app, 'Community', 'Spelling Bee resources suggested by the community', {
                 canChangeState: true
             });
-            this.menuAction = 'popup';
+            this.menuAction = 'popup sidebar';
             this.menuIcon = 'null';
             const words = ['two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
             const features = el.ul({
@@ -1289,7 +1277,7 @@
         }
     }
 
-    var css = "@charset \"UTF-8\";\n/**\n *  Spelling Bee Assistant is an add-on for Spelling Bee, the New York Times’ popular word puzzle\n * \n *  Copyright (C) 2020  Dieter Raber\n *  https://www.gnu.org/licenses/gpl-3.0.en.html\n */\n/**\n *  Spelling Bee Assistant is an add-on for Spelling Bee, the New York Times’ popular word puzzle\n * \n *  Copyright (C) 2020  Dieter Raber\n *  https://www.gnu.org/licenses/gpl-3.0.en.html\n */\n[data-sba-theme] {\n  --dhue: 0;\n  --dsat: 0%;\n  --link-hue: 206;\n  --shadow-light-color: hsl(49, 96%, 50%, 0.35);\n  --shadow-dark-color: hsl(49, 96%, 50%, 0.7);\n  --highlight-text-color: hsl(0, 0%, 0%);\n}\n\n[data-sba-theme=light] {\n  --highlight-bg-color: #f7db22;\n  --text-color: black;\n  --site-text-color: rgba(0, 0, 0, 0.9);\n  --body-bg-color: white;\n  --modal-bg-color: rgba(255, 255, 255, 0.85);\n  --border-color: #dbdbdb;\n  --area-bg-color: #e6e6e6;\n  --invalid-color: #adadad;\n  --menu-hover-color: whitesmoke;\n  --head-row-bg-color: whitesmoke;\n  --card-color: rgba(247, 219, 34, 0.1);\n  --link-color: hsl(var(--link-hue), 45%, 38%);\n  --link-visited-color: hsl(var(--link-hue), 45%, 53%);\n  --link-hover-color: hsl(var(--link-hue), 45%, 53%);\n  --success-color: #2ca61c;\n}\n\n[data-sba-theme=dark] {\n  --highlight-bg-color: #facd05;\n  --text-color: hsl(var(--dhue), var(--dsat), 85%);\n  --site-text-color: hsl(var(--dhue), var(--dsat), 100%, 0.9);\n  --body-bg-color: hsl(var(--dhue), var(--dsat), 7%);\n  --modal-bg-color: hsl(var(--dhue), var(--dsat), 7%, 0.85);\n  --border-color: hsl(var(--dhue), var(--dsat), 20%);\n  --area-bg-color: hsl(var(--dhue), var(--dsat), 22%);\n  --invalid-color: hsl(var(--dhue), var(--dsat), 50%);\n  --menu-hover-color: hsl(var(--dhue), var(--dsat), 22%);\n  --head-row-bg-color: hsl(var(--dhue), var(--dsat), 13%);\n  --card-color: hsl(var(--dhue), var(--dsat), 22%);\n  --link-color: hsl(var(--link-hue), 90%, 64%);\n  --link-visited-color: hsl(var(--link-hue), 90%, 76%);\n  --link-hover-color: hsl(var(--link-hue), 90%, 76%);\n  --success-color: #64f651;\n}\n\n/**\n *  Spelling Bee Assistant is an add-on for Spelling Bee, the New York Times’ popular word puzzle\n * \n *  Copyright (C) 2020  Dieter Raber\n *  https://www.gnu.org/licenses/gpl-3.0.en.html\n */\nbody {\n  background: var(--body-bg-color);\n  color: var(--text-color);\n}\nbody .pz-game-field {\n  background: var(--body-bg-color);\n  color: var(--text-color);\n}\nbody[data-sba-theme=dark] .pz-game-wrapper, body[data-sba-theme=dark] #js-hook-pz-moment__loading {\n  background: var(--body-bg-color) !important;\n  color: var(--text-color);\n}\nbody .pz-game-wrapper .sb-modal-message a {\n  color: var(--link-color);\n}\nbody .pz-game-wrapper .sb-modal-message a:visited {\n  color: var(--link-visited-color);\n}\nbody .pz-game-wrapper .sb-modal-message a:hover {\n  color: var(--link-hover-color);\n}\nbody .pz-game-wrapper .sb-progress-marker .sb-progress-value,\nbody .pz-game-wrapper .hive-cell:first-child .cell-fill {\n  background: var(--highlight-bg-color);\n  fill: var(--highlight-bg-color);\n  color: var(--highlight-text-color);\n}\nbody .pz-game-wrapper .sba-color-selector .hive .hive-cell .cell-fill,\nbody .pz-game-wrapper .hive-cell .cell-fill {\n  fill: var(--area-bg-color);\n}\nbody[data-sba-theme=dark] .sb-message {\n  background: var(--area-bg-color);\n}\nbody[data-sba-theme=dark] .hive-action__shuffle {\n  position: relative;\n}\nbody[data-sba-theme=dark] .sb-progress-value {\n  font-weight: bold;\n}\nbody[data-sba-theme=dark] .sb-toggle-icon,\nbody[data-sba-theme=dark] .sb-kebob .sb-bob-arrow,\nbody[data-sba-theme=dark] .hive-action__shuffle {\n  background-position: -1000px;\n}\nbody[data-sba-theme=dark] .sb-toggle-icon:after,\nbody[data-sba-theme=dark] .sb-kebob .sb-bob-arrow:after,\nbody[data-sba-theme=dark] .hive-action__shuffle:after {\n  content: \"\";\n  opacity: 0.85;\n  top: 0;\n  left: 0;\n  bottom: 0;\n  right: 0;\n  position: absolute;\n  z-index: 0;\n  filter: invert(1);\n  background-image: inherit;\n  background-repeat: inherit;\n  background-position: center;\n  background-size: inherit;\n}\n\n#js-logo-nav rect {\n  fill: var(--body-bg-color);\n}\n#js-logo-nav path {\n  fill: var(--text-color);\n}\n\n.pz-moment__loading {\n  color: black;\n}\n\n.pz-nav__hamburger-inner,\n.pz-nav__hamburger-inner::before,\n.pz-nav__hamburger-inner::after {\n  background-color: var(--text-color);\n}\n\n.pz-nav {\n  width: 100%;\n  background: var(--body-bg-color);\n}\n\n.pz-modal__button.white,\n.pz-footer,\n.pz-moment,\n.sb-modal-scrim {\n  background: var(--modal-bg-color) !important;\n  color: var(--text-color) !important;\n}\n.pz-modal__button.white .pz-moment__button.secondary,\n.pz-footer .pz-moment__button.secondary,\n.pz-moment .pz-moment__button.secondary,\n.sb-modal-scrim .pz-moment__button.secondary {\n  color: white;\n}\n\n.sb-modal-wrapper .sb-modal-frame {\n  border: 1px solid var(--border-color);\n  background: var(--body-bg-color);\n  color: var(--text-color);\n}\n.sb-modal-wrapper .pz-modal__title,\n.sb-modal-wrapper .sb-modal-close {\n  color: var(--text-color);\n}\n\n.pz-moment__close::before, .pz-moment__close::after {\n  background: var(--text-color);\n}\n\n.pz-modal__button.white:hover {\n  background: var(--area-bg-color);\n}\n\n.sb-input-invalid {\n  color: var(--invalid-color);\n}\n\n.sb-toggle-expand {\n  box-shadow: none;\n}\n\n.sb-input-bright,\n.sb-progress-dot.completed::after {\n  color: var(--highlight-bg-color);\n}\n\n.cell-fill {\n  stroke: var(--body-bg-color);\n}\n\n.cell-letter {\n  fill: var(--text-color);\n}\n\n.hive-cell.center .cell-letter {\n  fill: var(--highhlight-text-color);\n}\n\n.hive-action {\n  background-color: var(--body-bg-color);\n  color: var(--text-color);\n}\n.hive-action.push-active {\n  background: var(--menu-hover-color);\n}\n\n[data-sba-theme] .sb-modal-wordlist-items li,\n.sb-wordlist-items-pag > li,\n.pz-ad-box,\n.pz-game-toolbar,\n.pz-spelling-bee-wordlist,\n.hive-action,\n.sb-wordlist-box,\n.sb-message {\n  border-color: var(--border-color);\n}\n\n.sb-toggle-expand {\n  background: var(--body-bg-color);\n}\n\n.sb-progress-line,\n.sb-progress-dot::after,\n.pz-nav::after {\n  background: var(--border-color);\n}\n\n.sb-bob {\n  background-color: var(--border-color);\n}\n.sb-bob.active {\n  background-color: var(--text-color);\n}\n\n/**\n *  Spelling Bee Assistant is an add-on for Spelling Bee, the New York Times’ popular word puzzle\n * \n *  Copyright (C) 2020  Dieter Raber\n *  https://www.gnu.org/licenses/gpl-3.0.en.html\n */\n.sba {\n  background: var(--body-bg-color);\n  border-radius: 6px;\n  border-style: solid;\n  border-width: 1px;\n}\n.sba *:focus {\n  outline: 0;\n}\n.sba ::selection {\n  background: transparent;\n}\n.sba details {\n  font-size: 90%;\n  margin-bottom: 1px;\n}\n.sba summary {\n  font-size: 13px;\n  line-height: 20px;\n  padding: 1px 6px 0 6px;\n  background: var(--area-bg-color);\n  color: var(--text-color);\n  cursor: pointer;\n  position: relative;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  border: 1px solid var(--border-color);\n}\n\n[data-ui].inactive {\n  display: none;\n}\n\n.sba-data-pane {\n  border: 1px solid var(--border-color);\n  width: 100%;\n  font-size: 85%;\n  margin-bottom: 2px;\n  border-collapse: collapse;\n  table-layout: fixed;\n  border-top: none;\n}\n.sba-data-pane[data-cols=\"3\"] :is(th, td) {\n  width: 33.3333333333%;\n}\n.sba-data-pane[data-cols=\"4\"] :is(th, td) {\n  width: 25%;\n}\n.sba-data-pane[data-cols=\"5\"] :is(th, td) {\n  width: 20%;\n}\n.sba-data-pane[data-cols=\"6\"] :is(th, td) {\n  width: 16.6666666667%;\n}\n.sba-data-pane[data-cols=\"7\"] :is(th, td) {\n  width: 14.2857142857%;\n}\n.sba-data-pane[data-cols=\"8\"] :is(th, td) {\n  width: 12.5%;\n}\n.sba-data-pane[data-cols=\"9\"] :is(th, td) {\n  width: 11.1111111111%;\n}\n.sba-data-pane[data-cols=\"10\"] :is(th, td) {\n  width: 10%;\n}\n.sba-data-pane th {\n  text-transform: uppercase;\n  background: var(--head-row-bg-color);\n}\n.sba-data-pane .sba-preeminent {\n  font-weight: bold;\n  border-bottom: 2px solid var(--highlight-bg-color) !important;\n}\n.sba-data-pane .sba-completed td,\n.sba-data-pane td.sba-completed {\n  color: var(--invalid-color);\n  font-weight: normal;\n}\n.sba-data-pane .sba-hidden {\n  display: none;\n}\n.sba-data-pane :is(th, td) {\n  border: 1px solid var(--border-color);\n  border-top: none;\n  white-space: nowrap;\n  text-align: center;\n  padding: 3px 2px;\n}\n.sba-data-pane th {\n  background-color: var(--head-row-bg-color);\n}\n\n[data-ui=community] h4 {\n  font-weight: 700;\n  font-family: nyt-franklin;\n  font-size: 18px;\n  margin: 0 0 1px 0;\n}\n[data-ui=community] p {\n  margin: 0 0 2px 0;\n  font-size: 16px;\n}\n[data-ui=community] em {\n  display: block;\n  font-weight: normal;\n  font-weight: 500;\n  font-size: 14px;\n  font-family: nyt-franklin;\n}\n[data-ui=community] li {\n  margin: 0 0 12px 0;\n}\n[data-ui=community] li ul {\n  padding-left: 20px;\n  list-style: disc;\n}\n[data-ui=community] li ul li {\n  margin: 0;\n}\n[data-ui=community] li ul li a {\n  color: var(--link-color);\n}\n[data-ui=community] li ul li a:hover {\n  color: var(--link-hover-color);\n}\n[data-ui=community] .sb-modal-body {\n  margin-top: 0;\n  padding-bottom: 10px;\n}\n\n[data-ui=yourProgress] b {\n  font-weight: 700;\n}\n[data-ui=yourProgress] .sba-data-pane {\n  margin-left: 5px;\n  max-width: 300px;\n  border: none;\n}\n[data-ui=yourProgress] .sba-data-pane tr.sba-completed td {\n  color: var(--text-color);\n}\n[data-ui=yourProgress] .sba-data-pane tr td {\n  border: none;\n  text-align: left;\n  line-height: 1.8;\n}\n[data-ui=yourProgress] .sba-data-pane tr td:nth-child(n+2) {\n  text-align: right;\n  width: 80px;\n}\n[data-ui=yourProgress] .sba-data-pane tr td:nth-child(2)::after {\n  content: \" pts.\";\n}\n[data-ui=yourProgress] .sba-data-pane tr td:last-child::after {\n  content: \"%\";\n}\n\n[data-ui=header] {\n  font-weight: bold;\n  line-height: 32px;\n  flex-grow: 2;\n  text-indent: 1px;\n}\n\n[data-ui=progressBar] {\n  -webkit-appearance: none;\n  appearance: none;\n  width: 100%;\n  border-radius: 0;\n  margin: 0;\n  height: 6px;\n  padding: 0;\n  background: transparent;\n  display: block;\n  border: none;\n  border-bottom: 1px var(--border-color) solid;\n}\n[data-ui=progressBar]::-webkit-progress-bar {\n  background-color: transparent;\n}\n[data-ui=progressBar]::-webkit-progress-value {\n  background-color: var(--highlight-bg-color);\n  height: 4px;\n}\n[data-ui=progressBar]::-moz-progress-bar {\n  background-color: var(--highlight-bg-color);\n}\n\n[data-ui=spillTheBeans] {\n  text-align: center;\n  padding: 14px 0;\n  font-size: 38px;\n  margin-top: -24px;\n}\n\n[data-ui=menu] {\n  position: relative;\n  z-index: 1;\n}\n[data-ui=menu] .pane {\n  color: var(--text-color);\n  background: var(--body-bg-color);\n  border: 1px var(--border-color) solid;\n  padding: 5px;\n  width: 179px;\n}\n[data-ui=menu] li {\n  position: relative;\n  line-height: 1.8;\n  white-space: nowrap;\n  cursor: pointer;\n  overflow: hidden;\n  display: block;\n  padding: 5px 9px 5px 36px;\n  font-size: 14px;\n}\n[data-ui=menu] li::before, [data-ui=menu] li::after {\n  position: absolute;\n  display: block;\n}\n[data-ui=menu] li[data-icon=checkmark].checked::after {\n  content: \"✔\";\n  color: var(--highlight-bg-color);\n  top: 3px;\n  left: 14px;\n  font-size: 16px;\n}\n[data-ui=menu] li[data-target=darkModeColors], [data-ui=menu] li[data-icon=sba] {\n  border-top: 1px solid var(--border-color);\n}\n[data-ui=menu] li[data-icon=sba] {\n  color: currentColor;\n}\n[data-ui=menu] li[data-icon=sba]:hover {\n  color: var(--link-hover-color);\n  text-decoration: underline;\n}\n[data-ui=menu] li svg {\n  display: inline-block;\n  width: 20px;\n  height: 20px;\n  position: absolute;\n  left: 7px;\n  top: 6px;\n}\n[data-ui=menu] li svg .shape {\n  fill: var(--text-color);\n}\n[data-ui=menu] li svg .content {\n  fill: var(--highlight-bg-color);\n}\n\n.sba-color-selector {\n  display: flex;\n  justify-content: space-between;\n  gap: 10px;\n}\n.sba-color-selector svg {\n  width: 120px;\n  height: 120px;\n  display: block;\n}\n\n[data-ui=darkModeColors] .hive {\n  width: auto;\n  padding: 0;\n  flex-grow: 2;\n  display: flex;\n}\n[data-ui=darkModeColors] .hive-cell {\n  position: static;\n  margin: auto;\n  border: 1px solid var(--border-color);\n  padding: 20px;\n  width: 168px;\n  height: 100%;\n  border-radius: 6px;\n}\n[data-ui=darkModeColors] .cell-letter {\n  font-size: 8px;\n  font-weight: 600;\n}\n\n.sba-swatches {\n  display: flex;\n  flex-wrap: wrap;\n  list-style: none;\n  justify-content: space-around;\n  padding: 0;\n  width: 220px;\n}\n.sba-swatches li {\n  position: relative;\n  overflow: hidden;\n  margin-bottom: 5px;\n}\n.sba-swatches label {\n  border: 1px var(--border-color) solid;\n  display: block;\n  width: 50px;\n  height: 50px;\n  overflow: hidden;\n  cursor: pointer;\n}\n.sba-swatches input {\n  position: absolute;\n  left: -100px;\n}\n.sba-swatches input:checked ~ label {\n  border-color: var(--highlight-bg-color);\n}\n\n.sba-googlified .sb-anagram {\n  cursor: pointer;\n}\n.sba-googlified .sb-anagram:hover {\n  text-decoration: underline;\n  color: var(--link-hover-color);\n}\n\n#portal-game-toolbar [role=presentation]::selection {\n  background: transparent;\n}\n\n[data-sba-theme] .sb-modal-wordlist-items li .check.checked {\n  border: none;\n  height: auto;\n  transform: none;\n}\n[data-sba-theme] .sb-modal-wordlist-items li .check.checked::after {\n  position: relative;\n  content: \"✔\";\n  color: var(--highlight-bg-color);\n  top: 4px;\n  font-size: 16px;\n}\n[data-sba-theme] .sb-modal-header .sb-modal-letters {\n  position: relative;\n  top: -5px;\n}\n\n.pz-toolbar-button:hover,\n[data-ui=menu] li:hover {\n  background: var(--menu-hover-color);\n  color: var(--text-color);\n}\n.pz-toolbar-button::selection,\n[data-ui=menu] li::selection {\n  background-color: transparent;\n}\n\n[data-ui=grid] table {\n  border-top: 1px solid var(--border-color);\n  margin-left: -20px;\n  width: calc(100% + 40px);\n}\n[data-ui=grid] tbody tr:last-child td {\n  background-color: var(--head-row-bg-color);\n}\n[data-ui=grid] tbody tr td {\n  padding: 5px 0 !important;\n}\n[data-ui=grid] tbody tr td:last-of-type {\n  background-color: var(--head-row-bg-color);\n}\n\n.sba details[open] summary:before {\n  transform: rotate(-90deg);\n  left: 10px;\n  top: 1px;\n}\n.sba summary {\n  list-style: none;\n  padding: 1px 15px 0 21px;\n}\n.sba summary::marker {\n  display: none;\n}\n.sba summary:before {\n  content: \"❯\";\n  font-size: 9px;\n  position: absolute;\n  display: inline-block;\n  transform: rotate(90deg);\n  transform-origin: center;\n  left: 7px;\n  top: 0;\n}\n\n[data-sba-theme] :is(.sb-wordlist-items-pag, .sb-modal-wordlist-items) > li.sba-pangram {\n  font-weight: 700;\n  border-bottom: 2px var(--highlight-bg-color) solid;\n}\n[data-sba-theme] .sba-pop-up.sb-modal-frame .sb-modal-content .sba-modal-footer {\n  text-align: right;\n  font-size: 13px;\n  border-top: 1px solid var(--border-color);\n  padding: 10px 10px 0 10px;\n}\n\n.sb-modal-frame .sb-modal-content::after {\n  background: linear-gradient(180deg, transparent 0%, var(--modal-bg-color) 56.65%, var(--body-bg-color) 100%);\n}\n\n/**\n *  Spelling Bee Assistant is an add-on for Spelling Bee, the New York Times’ popular word puzzle\n * \n *  Copyright (C) 2020  Dieter Raber\n *  https://www.gnu.org/licenses/gpl-3.0.en.html\n */\n.sba-container {\n  display: none;\n}\n\n.sba {\n  margin: var(--sba-app-margin);\n  width: var(--sba-app-width);\n  padding: var(--sba-app-padding);\n  box-sizing: border-box;\n}\n.sba *,\n.sba *:before,\n.sba *:after {\n  box-sizing: border-box;\n}\n\n[data-ui=menu] .pane {\n  position: absolute;\n  top: 0;\n  right: -10000px;\n}\n\n[data-sba-submenu=true] .sba {\n  position: relative;\n  left: -167px;\n  top: -175px;\n}\n[data-sba-submenu=true] .pz-game-toolbar {\n  position: relative;\n  z-index: 4;\n}\n[data-sba-submenu=true] [data-ui=menu] .pane {\n  right: -16px;\n  top: 49px;\n}\n[data-sba-submenu=true] .sba {\n  left: -163px;\n  top: 0;\n}\n[data-sba-submenu=true].pz-desktop .pane {\n  right: -16px;\n  top: 55px;\n}\n\n[data-sba-active=true] {\n  --sba-app-width: 100px;\n  --sba-app-padding: 0;\n  --sba-app-margin: 0;\n  --sba-game-offset: 12px;\n  --sba-game-width: 1256px;\n  --sba-mobile-threshold: 900px;\n}\n[data-sba-active=true] .sba-container {\n  display: block;\n  position: absolute;\n  top: 50%;\n  transform: translate(0, -50%);\n  right: var(--sba-game-offset);\n  z-index: 1;\n}\n[data-sba-active=true] .sba {\n  border-color: transparent;\n}\n[data-sba-active=true] [data-ui=header] {\n  display: none;\n}\n[data-sba-active=true][data-sba-submenu=true] .sba-container {\n  top: 0;\n  height: 0;\n  z-index: 4;\n}\n[data-sba-active=true] .sb-expanded .sba-container {\n  visibility: hidden;\n  pointer-events: none;\n}\n[data-sba-active=true] .sb-content-box {\n  max-width: var(--sba-game-width);\n  justify-content: space-between;\n  position: relative;\n}\n[data-sba-active=true] .sb-controls-box {\n  max-width: calc(100vw - var(--sba-app-width));\n}\n\n@media (max-width: 370px) {\n  [data-sba-active=true] .sb-hive {\n    width: 70%;\n  }\n  [data-sba-active=true].pz-spelling-bee-wordlist .hive-action:not(.hive-action__shuffle) {\n    font-size: 0.9em;\n    margin: 0 4px 8px;\n    padding: 23px 0;\n  }\n  [data-sba-active=true] .hive-action:not(.hive-action__shuffle) {\n    width: 71px;\n    min-width: auto;\n  }\n}\n@media (max-width: 450px) {\n  [data-ui=grid] table {\n    table-layout: auto;\n  }\n  [data-ui=grid] table.sba-data-pane tbody th {\n    width: 28px !important;\n  }\n  [data-ui=grid] table.sba-data-pane thead th:first-of-type {\n    width: 28px !important;\n  }\n  [data-ui=grid] table.sba-data-pane :is(thead, tbody) tr :is(th, td) {\n    width: auto;\n    font-size: 90%;\n  }\n}\n[data-sba-active] .pz-game-toolbar .pz-row {\n  padding: 0;\n}\n\n@media (min-width: 516px) {\n  [data-sba-active] .pz-game-toolbar .pz-row {\n    padding: 0 12px;\n  }\n  [data-sba-active].pz-desktop .sba {\n    left: -175px;\n  }\n\n  [data-ui=score] .sba-data-pane tbody th {\n    text-transform: none;\n    width: 31%;\n  }\n  [data-ui=score] .sba-data-pane tbody td {\n    width: 23%;\n  }\n  [data-ui=score] .sba-data-pane tbody tr:nth-child(1) th::after {\n    content: \"ords\";\n  }\n  [data-ui=score] .sba-data-pane tbody tr:nth-child(2) th::after {\n    content: \"oints\";\n  }\n  [data-ui=score] .sba-data-pane thead th {\n    width: 23%;\n  }\n  [data-ui=score] .sba-data-pane thead th:first-of-type {\n    width: 31%;\n  }\n\n  [data-sba-active=true] {\n    --sba-app-width: 138px;\n    --sba-app-padding: 0 5px 5px;\n  }\n  [data-sba-active=true] .sba {\n    border-color: var(--border-color);\n  }\n  [data-sba-active=true] [data-ui=header] {\n    display: block;\n  }\n}\n@media (min-width: 900px) {\n  [data-sba-submenu=true].pz-desktop [data-ui=menu] .pane {\n    right: 0;\n    top: 55px;\n  }\n\n  [data-sba-active=true] {\n    --sba-app-width: 160px;\n    --sba-app-padding: 0 8px 8px;\n    --sba-app-margin: 66px 0 0 0;\n  }\n  [data-sba-active=true] .sb-content-box {\n    padding: 0 var(--sba-game-offset);\n  }\n  [data-sba-active=true] .sb-controls-box {\n    max-width: none;\n  }\n  [data-sba-active=true] .sba-container {\n    position: static;\n    transform: none;\n  }\n  [data-sba-active=true] .sb-expanded .sba-container {\n    z-index: 1;\n  }\n  [data-sba-active=true][data-sba-submenu=true] .sba {\n    top: -66px;\n  }\n  [data-sba-active=true].pz-desktop .sba {\n    left: -191px;\n  }\n}\n@media (min-width: 1298px) {\n  [data-sba-active=true][data-sba-submenu=true] .sba {\n    left: -179px;\n  }\n}\n@media (min-width: 768px) {\n  [data-sba-theme].pz-page .sba-pop-up.sb-modal-frame .sb-modal-content .sb-modal-body {\n    padding-right: 56px;\n  }\n  [data-sba-theme].pz-page .sba-pop-up.sb-modal-frame .sb-modal-content .sb-modal-header {\n    padding-right: 56px;\n  }\n  [data-sba-theme].pz-page .sba-pop-up.sb-modal-frame .sb-modal-content .sba-modal-footer {\n    text-align: right;\n    border-top: 1px solid var(--border-color);\n    padding-top: 10px;\n    width: calc(100% - 112px);\n    margin: -8px auto 15px;\n  }\n}";
+    var css = "@charset \"UTF-8\";\n/**\n *  Spelling Bee Assistant is an add-on for Spelling Bee, the New York Times’ popular word puzzle\n * \n *  Copyright (C) 2020  Dieter Raber\n *  https://www.gnu.org/licenses/gpl-3.0.en.html\n */\n/**\n *  Spelling Bee Assistant is an add-on for Spelling Bee, the New York Times’ popular word puzzle\n * \n *  Copyright (C) 2020  Dieter Raber\n *  https://www.gnu.org/licenses/gpl-3.0.en.html\n */\n[data-sba-theme] {\n  --dhue: 0;\n  --dsat: 0%;\n  --link-hue: 206;\n  --shadow-light-color: hsl(49, 96%, 50%, 0.35);\n  --shadow-dark-color: hsl(49, 96%, 50%, 0.7);\n  --highlight-text-color: hsl(0, 0%, 0%);\n}\n\n[data-sba-theme=light] {\n  --highlight-bg-color: #f7db22;\n  --text-color: black;\n  --site-text-color: rgba(0, 0, 0, 0.9);\n  --body-bg-color: white;\n  --modal-bg-color: rgba(255, 255, 255, 0.85);\n  --border-color: #dbdbdb;\n  --area-bg-color: #e6e6e6;\n  --invalid-color: #adadad;\n  --menu-hover-color: whitesmoke;\n  --head-row-bg-color: whitesmoke;\n  --card-color: rgba(247, 219, 34, 0.1);\n  --link-color: hsl(var(--link-hue), 45%, 38%);\n  --link-visited-color: hsl(var(--link-hue), 45%, 53%);\n  --link-hover-color: hsl(var(--link-hue), 45%, 53%);\n  --success-color: #2ca61c;\n}\n\n[data-sba-theme=dark] {\n  --highlight-bg-color: #facd05;\n  --text-color: hsl(var(--dhue), var(--dsat), 85%);\n  --site-text-color: hsl(var(--dhue), var(--dsat), 100%, 0.9);\n  --body-bg-color: hsl(var(--dhue), var(--dsat), 7%);\n  --modal-bg-color: hsl(var(--dhue), var(--dsat), 7%, 0.85);\n  --border-color: hsl(var(--dhue), var(--dsat), 20%);\n  --area-bg-color: hsl(var(--dhue), var(--dsat), 22%);\n  --invalid-color: hsl(var(--dhue), var(--dsat), 50%);\n  --menu-hover-color: hsl(var(--dhue), var(--dsat), 22%);\n  --head-row-bg-color: hsl(var(--dhue), var(--dsat), 13%);\n  --card-color: hsl(var(--dhue), var(--dsat), 22%);\n  --link-color: hsl(var(--link-hue), 90%, 64%);\n  --link-visited-color: hsl(var(--link-hue), 90%, 76%);\n  --link-hover-color: hsl(var(--link-hue), 90%, 76%);\n  --success-color: #64f651;\n}\n\n/**\n *  Spelling Bee Assistant is an add-on for Spelling Bee, the New York Times’ popular word puzzle\n * \n *  Copyright (C) 2020  Dieter Raber\n *  https://www.gnu.org/licenses/gpl-3.0.en.html\n */\nbody {\n  background: var(--body-bg-color);\n  color: var(--text-color);\n}\nbody .pz-game-field {\n  background: var(--body-bg-color);\n  color: var(--text-color);\n}\nbody[data-sba-theme=dark] .pz-game-wrapper, body[data-sba-theme=dark] #js-hook-pz-moment__loading {\n  background: var(--body-bg-color) !important;\n  color: var(--text-color);\n}\nbody .pz-game-wrapper .sb-modal-message a {\n  color: var(--link-color);\n}\nbody .pz-game-wrapper .sb-modal-message a:visited {\n  color: var(--link-visited-color);\n}\nbody .pz-game-wrapper .sb-modal-message a:hover {\n  color: var(--link-hover-color);\n}\nbody .pz-game-wrapper .sb-progress-marker .sb-progress-value,\nbody .pz-game-wrapper .hive-cell:first-child .cell-fill {\n  background: var(--highlight-bg-color);\n  fill: var(--highlight-bg-color);\n  color: var(--highlight-text-color);\n}\nbody .pz-game-wrapper .sba-color-selector .hive .hive-cell .cell-fill,\nbody .pz-game-wrapper .hive-cell .cell-fill {\n  fill: var(--area-bg-color);\n}\nbody[data-sba-theme=dark] .sb-message {\n  background: var(--area-bg-color);\n}\nbody[data-sba-theme=dark] .hive-action__shuffle {\n  position: relative;\n}\nbody[data-sba-theme=dark] .sb-progress-value {\n  font-weight: bold;\n}\nbody[data-sba-theme=dark] .sb-toggle-icon,\nbody[data-sba-theme=dark] .sb-kebob .sb-bob-arrow,\nbody[data-sba-theme=dark] .hive-action__shuffle {\n  background-position: -1000px;\n}\nbody[data-sba-theme=dark] .sb-toggle-icon:after,\nbody[data-sba-theme=dark] .sb-kebob .sb-bob-arrow:after,\nbody[data-sba-theme=dark] .hive-action__shuffle:after {\n  content: \"\";\n  opacity: 0.85;\n  top: 0;\n  left: 0;\n  bottom: 0;\n  right: 0;\n  position: absolute;\n  z-index: 0;\n  filter: invert(1);\n  background-image: inherit;\n  background-repeat: inherit;\n  background-position: center;\n  background-size: inherit;\n}\n\n#js-logo-nav rect {\n  fill: var(--body-bg-color);\n}\n#js-logo-nav path {\n  fill: var(--text-color);\n}\n\n.pz-moment__loading {\n  color: black;\n}\n\n.pz-nav__hamburger-inner,\n.pz-nav__hamburger-inner::before,\n.pz-nav__hamburger-inner::after {\n  background-color: var(--text-color);\n}\n\n.pz-nav {\n  width: 100%;\n  background: var(--body-bg-color);\n}\n\n.pz-modal__button.white,\n.pz-footer,\n.pz-moment,\n.sb-modal-scrim {\n  background: var(--modal-bg-color) !important;\n  color: var(--text-color) !important;\n}\n.pz-modal__button.white .pz-moment__button.secondary,\n.pz-footer .pz-moment__button.secondary,\n.pz-moment .pz-moment__button.secondary,\n.sb-modal-scrim .pz-moment__button.secondary {\n  color: white;\n}\n\n.sb-modal-wrapper .sb-modal-frame {\n  border: 1px solid var(--border-color);\n  background: var(--body-bg-color);\n  color: var(--text-color);\n}\n.sb-modal-wrapper .pz-modal__title,\n.sb-modal-wrapper .sb-modal-close {\n  color: var(--text-color);\n}\n\n.pz-moment__close::before, .pz-moment__close::after {\n  background: var(--text-color);\n}\n\n.pz-modal__button.white:hover {\n  background: var(--area-bg-color);\n}\n\n.sb-input-invalid {\n  color: var(--invalid-color);\n}\n\n.sb-toggle-expand {\n  box-shadow: none;\n}\n\n.sb-input-bright,\n.sb-progress-dot.completed::after {\n  color: var(--highlight-bg-color);\n}\n\n.cell-fill {\n  stroke: var(--body-bg-color);\n}\n\n.cell-letter {\n  fill: var(--text-color);\n}\n\n.hive-cell.center .cell-letter {\n  fill: var(--highhlight-text-color);\n}\n\n.hive-action {\n  background-color: var(--body-bg-color);\n  color: var(--text-color);\n}\n.hive-action.push-active {\n  background: var(--menu-hover-color);\n}\n\n[data-sba-theme] .sb-modal-wordlist-items li,\n.sb-wordlist-items-pag > li,\n.pz-ad-box,\n.pz-game-toolbar,\n.pz-spelling-bee-wordlist,\n.hive-action,\n.sb-wordlist-box,\n.sb-message {\n  border-color: var(--border-color);\n}\n\n.sb-toggle-expand {\n  background: var(--body-bg-color);\n}\n\n.sb-progress-line,\n.sb-progress-dot::after,\n.pz-nav::after {\n  background: var(--border-color);\n}\n\n.sb-bob {\n  background-color: var(--border-color);\n}\n.sb-bob.active {\n  background-color: var(--text-color);\n}\n\n/**\n *  Spelling Bee Assistant is an add-on for Spelling Bee, the New York Times’ popular word puzzle\n * \n *  Copyright (C) 2020  Dieter Raber\n *  https://www.gnu.org/licenses/gpl-3.0.en.html\n */\n.sba {\n  background: var(--body-bg-color);\n  border-radius: 6px;\n  border-style: solid;\n  border-width: 1px;\n}\n.sba *:focus {\n  outline: 0;\n}\n.sba ::selection {\n  background: transparent;\n}\n.sba details {\n  font-size: 90%;\n  margin-bottom: 1px;\n}\n.sba summary {\n  font-size: 13px;\n  line-height: 20px;\n  padding: 1px 6px 0 6px;\n  background: var(--area-bg-color);\n  color: var(--text-color);\n  cursor: pointer;\n  position: relative;\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  border: 1px solid var(--border-color);\n}\n\n[data-ui].inactive {\n  display: none;\n}\n\n.sba-data-tbl {\n  border: 1px solid var(--border-color);\n  width: 100%;\n  font-size: 85%;\n  margin-bottom: 2px;\n  border-collapse: collapse;\n  table-layout: fixed;\n  border-top: none;\n}\n.sba-data-tbl[data-cols=\"3\"] :is(th, td) {\n  width: 33.3333333333%;\n}\n.sba-data-tbl[data-cols=\"4\"] :is(th, td) {\n  width: 25%;\n}\n.sba-data-tbl[data-cols=\"5\"] :is(th, td) {\n  width: 20%;\n}\n.sba-data-tbl[data-cols=\"6\"] :is(th, td) {\n  width: 16.6666666667%;\n}\n.sba-data-tbl[data-cols=\"7\"] :is(th, td) {\n  width: 14.2857142857%;\n}\n.sba-data-tbl[data-cols=\"8\"] :is(th, td) {\n  width: 12.5%;\n}\n.sba-data-tbl[data-cols=\"9\"] :is(th, td) {\n  width: 11.1111111111%;\n}\n.sba-data-tbl[data-cols=\"10\"] :is(th, td) {\n  width: 10%;\n}\n.sba-data-tbl th {\n  text-transform: uppercase;\n  background: var(--head-row-bg-color);\n}\n.sba-data-tbl .sba-preeminent {\n  font-weight: bold;\n  border-bottom: 2px solid var(--highlight-bg-color) !important;\n}\n.sba-data-tbl .sba-completed td,\n.sba-data-tbl td.sba-completed {\n  color: var(--invalid-color);\n  font-weight: normal;\n}\n.sba-data-tbl .sba-hidden {\n  display: none;\n}\n.sba-data-tbl :is(th, td) {\n  border: 1px solid var(--border-color);\n  border-top: none;\n  white-space: nowrap;\n  text-align: center;\n  padding: 3px 2px;\n}\n.sba-data-tbl th {\n  background-color: var(--head-row-bg-color);\n}\n\n[data-ui=community] h4 {\n  font-weight: 700;\n  font-family: nyt-franklin;\n  font-size: 18px;\n  margin: 0 0 1px 0;\n}\n[data-ui=community] p {\n  margin: 0 0 2px 0;\n  font-size: 16px;\n}\n[data-ui=community] em {\n  display: block;\n  font-weight: normal;\n  font-weight: 500;\n  font-size: 14px;\n  font-family: nyt-franklin;\n}\n[data-ui=community] li {\n  margin: 0 0 12px 0;\n}\n[data-ui=community] li ul {\n  padding-left: 20px;\n  list-style: disc;\n}\n[data-ui=community] li ul li {\n  margin: 0;\n}\n[data-ui=community] li ul li a {\n  color: var(--link-color);\n}\n[data-ui=community] li ul li a:hover {\n  color: var(--link-hover-color);\n}\n[data-ui=community] .sb-modal-body {\n  margin-top: 0;\n  padding-bottom: 10px;\n}\n\n[data-ui=yourProgress] b {\n  font-weight: 700;\n}\n[data-ui=yourProgress] .sba-data-tbl {\n  margin-left: 5px;\n  max-width: 300px;\n  border: none;\n}\n[data-ui=yourProgress] .sba-data-tbl tr.sba-completed td {\n  color: var(--text-color);\n}\n[data-ui=yourProgress] .sba-data-tbl tr td {\n  border: none;\n  text-align: left;\n  line-height: 1.8;\n}\n[data-ui=yourProgress] .sba-data-tbl tr td:nth-child(n+2) {\n  text-align: right;\n  width: 80px;\n}\n[data-ui=yourProgress] .sba-data-tbl tr td:nth-child(2)::after {\n  content: \" pts.\";\n}\n[data-ui=yourProgress] .sba-data-tbl tr td:last-child::after {\n  content: \"%\";\n}\n\n[data-ui=header] {\n  font-weight: bold;\n  line-height: 32px;\n  flex-grow: 2;\n  text-indent: 1px;\n}\n\n[data-ui=progressBar] {\n  -webkit-appearance: none;\n  appearance: none;\n  width: 100%;\n  border-radius: 0;\n  margin: 0;\n  height: 6px;\n  padding: 0;\n  background: transparent;\n  display: block;\n  border: none;\n  border-bottom: 1px var(--border-color) solid;\n}\n[data-ui=progressBar]::-webkit-progress-bar {\n  background-color: transparent;\n}\n[data-ui=progressBar]::-webkit-progress-value {\n  background-color: var(--highlight-bg-color);\n  height: 4px;\n}\n[data-ui=progressBar]::-moz-progress-bar {\n  background-color: var(--highlight-bg-color);\n}\n\n[data-ui=spillTheBeans] {\n  text-align: center;\n  padding: 14px 0;\n  font-size: 38px;\n  margin-top: -24px;\n}\n\n[data-ui=menu] {\n  position: relative;\n  z-index: 1;\n}\n[data-ui=menu] .pane {\n  color: var(--text-color);\n  background: var(--body-bg-color);\n  border: 1px var(--border-color) solid;\n  padding: 5px;\n  width: 179px;\n}\n[data-ui=menu] li {\n  position: relative;\n  line-height: 1.8;\n  white-space: nowrap;\n  cursor: pointer;\n  overflow: hidden;\n  display: block;\n  padding: 5px 9px 5px 36px;\n  font-size: 14px;\n}\n[data-ui=menu] li::before, [data-ui=menu] li::after {\n  position: absolute;\n  display: block;\n}\n[data-ui=menu] li[data-icon=checkmark].checked::after {\n  content: \"✔\";\n  color: var(--highlight-bg-color);\n  top: 3px;\n  left: 14px;\n  font-size: 16px;\n}\n[data-ui=menu] li[data-target=darkModeColors], [data-ui=menu] li[data-icon=sba] {\n  border-top: 1px solid var(--border-color);\n}\n[data-ui=menu] li[data-icon=sba] {\n  color: currentColor;\n}\n[data-ui=menu] li[data-icon=sba]:hover {\n  color: var(--link-hover-color);\n  text-decoration: underline;\n}\n[data-ui=menu] li svg {\n  display: inline-block;\n  width: 20px;\n  height: 20px;\n  position: absolute;\n  left: 7px;\n  top: 6px;\n}\n[data-ui=menu] li svg .shape {\n  fill: var(--text-color);\n}\n[data-ui=menu] li svg .content {\n  fill: var(--highlight-bg-color);\n}\n\n.sba-color-selector {\n  display: flex;\n  justify-content: space-between;\n  gap: 10px;\n}\n.sba-color-selector svg {\n  width: 120px;\n  height: 120px;\n  display: block;\n}\n\n[data-ui=darkModeColors] .hive {\n  width: auto;\n  padding: 0;\n  flex-grow: 2;\n  display: flex;\n}\n[data-ui=darkModeColors] .hive-cell {\n  position: static;\n  margin: auto;\n  border: 1px solid var(--border-color);\n  padding: 20px;\n  width: 168px;\n  height: 100%;\n  border-radius: 6px;\n}\n[data-ui=darkModeColors] .cell-letter {\n  font-size: 8px;\n  font-weight: 600;\n}\n\n.sba-swatches {\n  display: flex;\n  flex-wrap: wrap;\n  list-style: none;\n  justify-content: space-around;\n  padding: 0;\n  width: 220px;\n}\n.sba-swatches li {\n  position: relative;\n  overflow: hidden;\n  margin-bottom: 5px;\n}\n.sba-swatches label {\n  border: 1px var(--border-color) solid;\n  display: block;\n  width: 50px;\n  height: 50px;\n  overflow: hidden;\n  cursor: pointer;\n}\n.sba-swatches input {\n  position: absolute;\n  left: -100px;\n}\n.sba-swatches input:checked ~ label {\n  border-color: var(--highlight-bg-color);\n}\n\n.sba-googlified .sb-anagram {\n  cursor: pointer;\n}\n.sba-googlified .sb-anagram:hover {\n  text-decoration: underline;\n  color: var(--link-hover-color);\n}\n\n#portal-game-toolbar [role=presentation]::selection {\n  background: transparent;\n}\n\n[data-sba-theme] .sb-modal-wordlist-items li .check.checked {\n  border: none;\n  height: auto;\n  transform: none;\n}\n[data-sba-theme] .sb-modal-wordlist-items li .check.checked::after {\n  position: relative;\n  content: \"✔\";\n  color: var(--highlight-bg-color);\n  top: 4px;\n  font-size: 16px;\n}\n[data-sba-theme] .sb-modal-header .sb-modal-letters {\n  position: relative;\n  top: -5px;\n}\n\n.pz-toolbar-button:hover,\n[data-ui=menu] li:hover {\n  background: var(--menu-hover-color);\n  color: var(--text-color);\n}\n.pz-toolbar-button::selection,\n[data-ui=menu] li::selection {\n  background-color: transparent;\n}\n\n[data-ui=grid] table {\n  border-top: 1px solid var(--border-color);\n  margin-left: -20px;\n  width: calc(100% + 40px);\n}\n[data-ui=grid] tbody tr:last-child td {\n  background-color: var(--head-row-bg-color);\n}\n[data-ui=grid] tbody tr td {\n  padding: 5px 0 !important;\n}\n[data-ui=grid] tbody tr td:last-of-type {\n  background-color: var(--head-row-bg-color);\n}\n\n.sba details[open] summary:before {\n  transform: rotate(-90deg);\n  left: 10px;\n  top: 1px;\n}\n.sba summary {\n  list-style: none;\n  padding: 1px 15px 0 21px;\n}\n.sba summary::marker {\n  display: none;\n}\n.sba summary:before {\n  content: \"❯\";\n  font-size: 9px;\n  position: absolute;\n  display: inline-block;\n  transform: rotate(90deg);\n  transform-origin: center;\n  left: 7px;\n  top: 0;\n}\n\n[data-sba-theme] :is(.sb-wordlist-items-pag, .sb-modal-wordlist-items) > li.sba-pangram {\n  font-weight: 700;\n  border-bottom: 2px var(--highlight-bg-color) solid;\n}\n[data-sba-theme] .sba-pop-up.sb-modal-frame .sb-modal-content .sba-modal-footer {\n  text-align: right;\n  font-size: 13px;\n  border-top: 1px solid var(--border-color);\n  padding: 10px 10px 0 10px;\n}\n\n.sb-modal-frame .sb-modal-content::after {\n  background: linear-gradient(180deg, transparent 0%, var(--modal-bg-color) 56.65%, var(--body-bg-color) 100%);\n}\n\n/**\n *  Spelling Bee Assistant is an add-on for Spelling Bee, the New York Times’ popular word puzzle\n * \n *  Copyright (C) 2020  Dieter Raber\n *  https://www.gnu.org/licenses/gpl-3.0.en.html\n */\n[data-sba-active=true] {\n  --sba-game-offset: 12px;\n  --sba-app-width: 100px;\n  --sba-app-padding: 0;\n  --sba-app-margin: 0;\n  --sba-mobile-threshold: 900px;\n  --sba-game-base-width: 1280px;\n  --sba-game-width: calc(var(--sba-game-base-width) - (2 * var(--sba-game-offset)));\n}\n\n.sba-container {\n  display: none;\n}\n\n.sba {\n  margin: var(--sba-app-margin);\n  width: var(--sba-app-width);\n  padding: var(--sba-app-padding);\n  box-sizing: border-box;\n}\n.sba *,\n.sba *:before,\n.sba *:after {\n  box-sizing: border-box;\n}\n\n[data-ui=menu] .pane {\n  position: absolute;\n  top: 0;\n  right: -10000px;\n}\n\n[data-sba-submenu=true] .sba {\n  position: relative;\n  left: -167px;\n  top: -175px;\n}\n[data-sba-submenu=true] .pz-game-toolbar {\n  position: relative;\n  z-index: 4;\n}\n[data-sba-submenu=true] [data-ui=menu] .pane {\n  right: -16px;\n  top: 49px;\n}\n[data-sba-submenu=true] .sba {\n  left: -163px;\n  top: 0;\n}\n[data-sba-submenu=true].pz-desktop .pane {\n  right: -16px;\n  top: 55px;\n}\n\n[data-sba-active=true] .sba-container {\n  display: block;\n  position: absolute;\n  top: 50%;\n  transform: translate(0, -50%);\n  right: var(--sba-game-offset);\n  z-index: 1;\n}\n[data-sba-active=true] .sba {\n  border-color: transparent;\n}\n[data-sba-active=true] [data-ui=header] {\n  display: none;\n}\n[data-sba-active=true][data-sba-submenu=true] .sba-container {\n  top: 0;\n  height: 0;\n  z-index: 4;\n}\n[data-sba-active=true] .sb-expanded .sba-container {\n  visibility: hidden;\n  pointer-events: none;\n}\n[data-sba-active=true] .sb-content-box {\n  max-width: var(--sba-game-width);\n  justify-content: space-between;\n  position: relative;\n}\n[data-sba-active=true] .sb-controls-box {\n  max-width: calc(100vw - var(--sba-app-width));\n}\n\n@media (max-width: 370px) {\n  [data-sba-active=true] .sb-hive {\n    width: 70%;\n  }\n  [data-sba-active=true].pz-spelling-bee-wordlist .hive-action:not(.hive-action__shuffle) {\n    font-size: 0.9em;\n    margin: 0 4px 8px;\n    padding: 23px 0;\n  }\n  [data-sba-active=true] .hive-action:not(.hive-action__shuffle) {\n    width: 71px;\n    min-width: auto;\n  }\n}\n@media (max-width: 450px) {\n  [data-ui=grid] table {\n    table-layout: auto;\n  }\n  [data-ui=grid] table.sba-data-tbl tbody th {\n    width: 28px !important;\n  }\n  [data-ui=grid] table.sba-data-tbl thead th:first-of-type {\n    width: 28px !important;\n  }\n  [data-ui=grid] table.sba-data-tbl :is(thead, tbody) tr :is(th, td) {\n    width: auto;\n    font-size: 90%;\n  }\n}\n[data-sba-active] .pz-game-toolbar .pz-row {\n  padding: 0;\n}\n\n@media (min-width: 516px) {\n  [data-sba-active] .pz-game-toolbar .pz-row {\n    padding: 0 12px;\n  }\n  [data-sba-active].pz-desktop .sba {\n    left: -175px;\n  }\n\n  [data-ui=score] .sba-data-tbl tbody th {\n    text-transform: none;\n    width: 31%;\n  }\n  [data-ui=score] .sba-data-tbl tbody td {\n    width: 23%;\n  }\n  [data-ui=score] .sba-data-tbl tbody tr:nth-child(1) th::after {\n    content: \"ords\";\n  }\n  [data-ui=score] .sba-data-tbl tbody tr:nth-child(2) th::after {\n    content: \"oints\";\n  }\n  [data-ui=score] .sba-data-tbl thead th {\n    width: 23%;\n  }\n  [data-ui=score] .sba-data-tbl thead th:first-of-type {\n    width: 31%;\n  }\n\n  [data-sba-active=true] {\n    --sba-app-width: 138px;\n    --sba-app-padding: 0 5px 5px;\n  }\n  [data-sba-active=true] .sba {\n    border-color: var(--border-color);\n  }\n  [data-sba-active=true] [data-ui=header] {\n    display: block;\n  }\n}\n@media (min-width: 768px) {\n  [data-sba-theme].pz-page .sba-pop-up.sb-modal-frame .sb-modal-content .sb-modal-body {\n    padding-right: 56px;\n  }\n  [data-sba-theme].pz-page .sba-pop-up.sb-modal-frame .sb-modal-content .sb-modal-header {\n    padding-right: 56px;\n  }\n  [data-sba-theme].pz-page .sba-pop-up.sb-modal-frame .sb-modal-content .sba-modal-footer {\n    text-align: right;\n    border-top: 1px solid var(--border-color);\n    padding-top: 10px;\n    width: calc(100% - 112px);\n    margin: -8px auto 15px;\n  }\n}\n@media (min-width: 900px) {\n  [data-sba-submenu=true].pz-desktop [data-ui=menu] .pane {\n    right: 0;\n    top: 55px;\n  }\n\n  [data-sba-active=true] {\n    --sba-app-width: 160px;\n    --sba-app-padding: 0 8px 8px;\n    --sba-app-margin: 66px 0 0 0;\n  }\n  [data-sba-active=true] .sb-content-box {\n    padding: 0 var(--sba-game-offset);\n  }\n  [data-sba-active=true] .sb-controls-box {\n    max-width: none;\n  }\n  [data-sba-active=true] .sba-container {\n    position: static;\n    transform: none;\n  }\n  [data-sba-active=true] .sb-expanded .sba-container {\n    z-index: 1;\n  }\n  [data-sba-active=true][data-sba-submenu=true] .sba {\n    top: -66px;\n  }\n  [data-sba-active=true].pz-desktop .sba {\n    left: -191px;\n  }\n}\n@media (min-width: 1298px) {\n  [data-sba-active=true][data-sba-submenu=true] .sba {\n    left: -179px;\n  }\n}\n@media (min-width: 1466px) {\n  [data-sba-sidebar=true][data-sba-submenu=false] {\n    --sba-app-width: 370px;\n    --sba-app-margin: 16px 0 0 0;\n    --sba-game-base-width: 1466px;\n  }\n  [data-sba-sidebar=true][data-sba-submenu=false] .sb-status-box {\n    max-width: 620px;\n  }\n  [data-sba-sidebar=true][data-sba-submenu=false] details {\n    overflow-y: hidden;\n  }\n  [data-sba-sidebar=true] [data-ui=submenu] [data-action*=sidebar] {\n    display: none;\n  }\n}";
 
     class Styles extends Plugin {
         constructor(app) {
@@ -1447,7 +1435,7 @@
         }
     }
 
-    class Grid extends TablePane {
+    class Grid extends DataTbl {
         display() {
             this.popup
                 .setContent('subtitle', this.description)
@@ -1519,6 +1507,45 @@
         }
     }
 
+    class SideBar extends Plugin {
+        toggle(state){
+            this.app.domSet('sidebar', state);
+            return super.toggle(state);
+        }
+        constructor(app) {
+            super(app, 'Modals in Sidebar', 'Uses sidebar instead of modals', {
+                canChangeState: true
+            });
+            this.targetMinWidth = 1466;
+            app.on(prefix('pluginsReady'), evt => {
+                evt.detail.forEach(plugin => {
+                    if (!plugin.canChangeState || plugin === this) {
+                        return false;
+                    }
+                    if(plugin.menuAction && plugin.menuAction.includes('sidebar')){
+                        const content = [el.summary({
+                            content: plugin.title
+                        })];
+                        if(this.getState()) {
+                            content.push(plugin.ui);
+                        }
+                        this.app.ui.append(el.details({
+                            classNames: [prefix('sidebar-only', 'd')],
+                            data: {
+                                panel: plugin.key
+                            },
+                            events: {
+                                toggle: evt => closeOthers(evt)
+                            },
+                            content
+                        }));
+                    }
+                });
+                this.toggle(this.getState());
+            });
+        }
+    }
+
     const getPlugins = () => {
         return {
             Header,
@@ -1529,15 +1556,16 @@
             ProgressBar,
             SpillTheBeans,
             DarkMode,
-            ColorConfig,
-            PangramHl,
-            Googlify,
+            Sidebar: SideBar,
             Styles,
             Menu,
             Grid,
             YourProgress,
             Community,
-            TodaysAnswers
+            ColorConfig,
+            TodaysAnswers,
+            PangramHl,
+            Googlify
         }
     };
 
@@ -1567,6 +1595,14 @@
         envIs(env) {
             return document.body.classList.contains('pz-' + env);
         }
+        buildComponentContainer() {
+            this.componentContainer = el.template({
+                data: {
+                    ui: prefix('component-container', 'd')
+                }
+            });
+            document.body.append(this.componentContainer);
+        }
         load() {
             el.waitFor('.sb-wordlist-items-pag', this.gameWrapper)
                 .then(resultList => {
@@ -1574,6 +1610,8 @@
                     data.init(this, this.getSyncData());
                     this.modalWrapper = el.$('.sb-modal-wrapper', this.gameWrapper);
                     this.resultList = resultList;
+                    this.target = el.$('.sb-content-box', this.gameWrapper);
+                    this.buildComponentContainer();
                     this.add();
                     this.domSet('active', true);
                     this.registerPlugins();
@@ -1639,7 +1677,7 @@
             const classNames = [settings$1.get('prefix')];
             return el.div({
                 data: {
-                    id: this.key,
+                    ui: this.key,
                     version: settings$1.get('version')
                 },
                 classNames,
@@ -1657,23 +1695,23 @@
             return this;
         }
         add() {
-            this.container.append(this.ui);
-            el.$('.sb-content-box', this.gameWrapper).prepend(this.container);
+            this.target.prepend(this.container);
         }
         constructor(gameWrapper) {
             super(settings$1.get('label'), {
                 canChangeState: true,
                 key: prefix('app'),
             });
-            const oldInstance = el.$(`[data-id="${this.key}"]`);
+            const oldInstance = el.$(`[data-ui="${this.key}"]`);
             if (oldInstance) {
                 oldInstance.dispatchEvent(new Event(prefix('destroy')));
             }
             this.gameWrapper = gameWrapper;
-            this.ui = this.buildUi();
             this.container = el.div({
                 classNames: [prefix('container', 'd')]
             });
+            this.ui = this.buildUi();
+            this.container.append(this.ui);
             this.load();
         }
     }

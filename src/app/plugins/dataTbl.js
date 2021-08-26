@@ -11,25 +11,25 @@ import {
 import Plugin from '../modules/plugin.js';
 
 /**
- * TablePane plugin
+ * DataTbl plugin
  *
  * @param {App} app
- * @returns {Plugin} TablePane
+ * @returns {Plugin} DataTbl
  */
-class TablePane extends Plugin {
+class DataTbl extends Plugin {
 
     /**
-     * Build/refresh pane
+     * Build/refresh dataTbl
      * @param evt
-     * @returns {TablePane}
+     * @returns {DataTbl}
      */
     // eslint-disable-next-line no-unused-vars
     run(evt) {
-        this.pane = el.empty(this.pane);
+        this.dataTbl = el.empty(this.dataTbl);
         const tbody = el.tbody();
         const data = this.getData();
         if (this.hasHeadRow) {
-            this.pane.append(this.buildHead(data.shift()));
+            this.dataTbl.append(this.buildHead(data.shift()));
         }
         const l = data.length;
         let colCnt = 0;
@@ -52,8 +52,8 @@ class TablePane extends Plugin {
             })
             tbody.append(tr);
         });
-        this.pane.dataset.cols = colCnt;
-        this.pane.append(tbody);
+        this.dataTbl.dataset.cols = colCnt;
+        this.dataTbl.append(tbody);
         return this;
     }
 
@@ -77,7 +77,7 @@ class TablePane extends Plugin {
      * @returns {HTMLElement}
      */
     getPane() {
-        return this.pane;
+        return this.dataTbl;
     }
 
     /**
@@ -111,10 +111,10 @@ class TablePane extends Plugin {
         this.cssMarkers = cssMarkers;
         this.hasHeadRow = hasHeadRow;
         this.hasHeadCol = hasHeadCol;
-        this.pane = el.table({
-            classNames: ['pane', prefix('dataPane', 'd')]
+        this.dataTbl = el.table({
+            classNames: ['pane', prefix('dataTbl', 'd')]
         });
     }
 }
 
-export default TablePane;
+export default DataTbl;

@@ -162,6 +162,7 @@ class Menu extends Plugin {
                     content: svgIcons[icon] ? [svgIcons[icon], plugin.title] : plugin.title
                 }));
             })
+
             pane.append(el.li({
                 attributes: {
                     title: settings.get('support.text')

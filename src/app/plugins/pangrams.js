@@ -5,7 +5,7 @@
  *  https://www.gnu.org/licenses/gpl-3.0.en.html
  */
 import data from '../modules/data.js';
-import TablePane from './tablePane.js';
+import DataTbl from './dataTbl.js';
 import el from '../modules/element.js';
 
 /**
@@ -14,7 +14,7 @@ import el from '../modules/element.js';
  * @param {App} app
  * @returns {Plugin} Pangrams
  */
-class Pangrams extends TablePane {
+class Pangrams extends DataTbl {
 
     /**
      * Get the data for the table cells
