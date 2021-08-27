@@ -510,10 +510,39 @@
 
     :is(.sb-wordlist-items-pag, .sb-modal-wordlist-items) {
         &>li {
+            position: relative;
             &.sba-pangram {
                 font-weight: 700;
                 border-bottom: 2px var(--highlight-bg-color) solid;
             }
+            .sba-marks {
+                position: absolute;
+                right: 0;
+                bottom: 3px;
+                display: flex;
+                max-width: 20px;
+                flex-wrap: wrap;
+            }
+        }
+    }
+    
+    mark {
+        width: 8px;
+        height: 8px;
+        margin: 1px;
+        border: 1px solid var(--border-color);
+        border-radius: 50%;
+        &.sba-starts-with {
+            background-color: darkgoldenrod;
+        }
+        &.sba-contained {
+            background-color: rgb(20, 131, 16);
+        }
+        &.sba-levenshtein {
+            background-color: rgb(155, 17, 17);
+        }
+        &.sba-contains {
+            background-color: rgb(46, 44, 161);
         }
     }
 

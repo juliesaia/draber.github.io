@@ -637,9 +637,39 @@ body[data-sba-theme=dark] .hive-action__shuffle:after {
   top: 0;
 }
 
+[data-sba-theme] :is(.sb-wordlist-items-pag, .sb-modal-wordlist-items) > li {
+  position: relative;
+}
 [data-sba-theme] :is(.sb-wordlist-items-pag, .sb-modal-wordlist-items) > li.sba-pangram {
   font-weight: 700;
   border-bottom: 2px var(--highlight-bg-color) solid;
+}
+[data-sba-theme] :is(.sb-wordlist-items-pag, .sb-modal-wordlist-items) > li .sba-marks {
+  position: absolute;
+  right: 0;
+  bottom: 3px;
+  display: flex;
+  max-width: 20px;
+  flex-wrap: wrap;
+}
+[data-sba-theme] mark {
+  width: 8px;
+  height: 8px;
+  margin: 1px;
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+}
+[data-sba-theme] mark.sba-starts-with {
+  background-color: darkgoldenrod;
+}
+[data-sba-theme] mark.sba-contained {
+  background-color: #148310;
+}
+[data-sba-theme] mark.sba-levenshtein {
+  background-color: #9b1111;
+}
+[data-sba-theme] mark.sba-contains {
+  background-color: #2e2ca1;
 }
 [data-sba-theme] .sba-pop-up.sb-modal-frame .sb-modal-content .sba-modal-footer {
   text-align: right;

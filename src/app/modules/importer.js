@@ -18,6 +18,7 @@ import Community from '../plugins/community.js';
 import TodaysAnswers from '../plugins/todaysAnswers.js';
 import PangramHl from '../plugins/pangramHl.js';
 import Googlify from '../plugins/googlify.js';
+import SimilarWords from '../plugins/similarWords';
 import Styles from '../plugins/styles.js';
 import Menu from '../plugins/menu.js';
 import Grid from '../plugins/grid.js';
@@ -40,6 +41,7 @@ const getPlugins = () => {
         ColorConfig,
         PangramHl,
         Googlify,
+        SimilarWords,
         Styles,
         Menu,
         Grid,
